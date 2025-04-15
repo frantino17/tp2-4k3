@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generador de Distribuciones</title>
+    <style>
+        .parametros { margin: 10px 0; padding: 10px; border: 1px solid #ddd; }
+        .hidden { display: none; }
+        table { border-collapse: collapse; margin: 20px 0; }
+        td, th { border: 1px solid #ddd; padding: 8px; }
+        .data-box { max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>Generador de Distribuciones Estadísticas</h1>
+    
+    {% if error %}
+        <div style="color: red;">{{ error }}</div>
+    {% endif %}
+    
+    <form method="POST">
+        <div>
+            <label>Distribución:</label>
+            <select name="distribucion" id="distribucion" onchange="updateParams()">
+                <option value="uniforme">Uniforme</option>
+                <option value="exponencial">Exponencial</option>
+                <option value="normal">Normal</option>
+            </select>
+        </div>
+        
+        <div>
+            <label>Tamaño de muestra (1-1.000.000):</label>
+            <input type="number" name="n" min="1" max="1000000" required>
+        </div>
+        
+        <div>
+            <label>Número de intervalos:</label>
+            <select name="intervalos" required>
+                <option value="10">10</option>
+                <option value="15">15</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+            </select>
+        </div>
+        
+        <!-- Parámetros por distribución -->
+        <div id="uniforme-params" class="parametros">
+            <h3>Parámetros Uniforme [a, b]</h3>
+            <label>a: <input type="number" step="any" name="a"></label>
+            <label>b: <input type="number" step="any" name="b"></label>
+        </div>
+        
+        <div id="exponencial-params" class="parametros hidden">
+            <h3>Parámetros Exponencial</h3>
+            <label>λ (lambda): <input type="number" step="any" name="lambda" min="0.0001"></label>
+        </div>
+        
+        <div id="normal-params" class="parametros hidden">
+            <h3>Parámetros Normal</h3>
+            <label>μ (mu): <input type="number" step="any" name="mu"></label>
+            <label>σ (sigma): <input type="number" step="any" name="sigma" min="0.0001"></label>
+        </div>
+        
+        <button type="submit">Generar</button>
+    </form>
+    
+    {% if plot_url %}
+        <h2>Resultados para Distribución {{ distribucion_actual.capitalize() }}</h2>
+        <img src="data:image/png;base64,{{ plot_url }}" alt="Histograma">
+        
+        <h3>Tabla de Frecuencias</h3>
+        <table>
+            <tr>
+                <th>Intervalo</th>
+                <th>Frecuencia</th>
+                <th>Frec. Relativa</th>
+            </tr>
+            {% for fila in tabla %}
+            <tr>
+                <td>{{ fila.intervalo }}</td>
+                <td>{{ fila.frecuencia }}</td>
+                <td>{{ fila.frecuencia_relativa }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        
+        <h3>Primeros 100 datos generados</h3>
+        <div class="data-box">
+            {% for valor in datos %}
+                {{ "%.4f"|format(valor) }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <script>
+        function updateParams() {
+            const dist = document.getElementById('distribucion').value;
+            document.querySelectorAll('.parametros').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`${dist}-params`).classList.remove('hidden');
+        }
+        updateParams(); // Inicializar
+    </script>
+</body>
+</html>
